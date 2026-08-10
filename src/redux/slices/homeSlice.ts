@@ -1,0 +1,376 @@
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import axiosInstance from "@/lib/axiosInstance";
+
+export const globalSearch = createAsyncThunk(
+  "home/globalSearch",
+  async ({ query }: { query: any }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(
+        `web/products/search-product?query=${query}`
+      );
+      return res.data;
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch search data"
+      );
+    }
+  }
+);
+
+export const getBrands = createAsyncThunk(
+  "home/getBrands",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`web/brands/brands`);
+      return res.data;
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch brands by id"
+      );
+    }
+  }
+);
+
+export const fetchPopularProducts = createAsyncThunk(
+  "home/fetchPopularProducts",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`web/products/popular-products`);
+      return res.data;
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch popular products"
+      );
+    }
+  }
+);
+
+export const fetchProductsData = createAsyncThunk(
+  "home/fetchProductsData",
+  async (endpoint: string, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(endpoint);
+      return res.data;
+    } catch (err: any) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch products"
+      );
+    }
+  }
+);
+
+export const fetchReviews = createAsyncThunk(
+  "home/fetchReviews",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(
+        "https://widget.advertsedge.com/api/reviews-sb"
+      );
+      return res?.data?.data ?? [];
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return thunkAPI.rejectWithValue(
+        err?.response?.data?.message ??
+        err?.message ??
+        "Unable to load testimonials. Please try again."
+      );
+    }
+  }
+);
+
+export const fetchStats = createAsyncThunk(
+  "home/fetchStats",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(
+        "https://widget.advertsedge.com/api/stats-sb"
+      );
+      if (res?.data?.status && res?.data?.data) {
+        return res.data.data;
+      }
+      return null;
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+      // Don't reject, just return null
+      return null;
+    }
+  }
+);
+
+export const bulkInquiry = createAsyncThunk(
+  "home/bulkInquiry",
+  async (payload: any, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post(
+        `web/bulk-inquiries/submit`,
+        payload
+      );
+
+      if (res?.data?.status && res?.data?.data) {
+        return res.data;
+      }
+
+      return null;
+    } catch (err: any) {
+    
+      return null;
+    }
+  }
+);
+export const addReview = createAsyncThunk(
+  "home/addReview",
+  async (payload: any, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post(
+        `web/reviews/add`,
+        payload
+      );
+
+      if (res?.data?.status && res?.data?.data) {
+        return res.data;
+      }
+
+      return thunkAPI.rejectWithValue(res?.data);
+    } catch (err: any) {
+     
+
+      return thunkAPI.rejectWithValue(
+        err?.response?.data || "Something went wrong"
+      );
+    }
+  }
+);
+
+export const contactUs = createAsyncThunk(
+  "home/contactUs",
+  async (payload: any, thunkAPI) => {
+    try {
+      const res = await axiosInstance.post(
+        `web/contact-requests/submit`,
+        payload
+      );
+
+      if (res?.data?.status && res?.data?.data) {
+      
+        return res.data;
+      }
+
+      return null;
+    } catch (err: any) {
+     
+      return null;
+    }
+  }
+);
+
+export const fetchCarousels = createAsyncThunk(
+  "home/get-crousel",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`web/carousels/get-crousel`);
+      return res.data;
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch popular products"
+      );
+    }
+  }
+);
+export const fetchLogos = createAsyncThunk(
+  "home/get-logos",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`web/logos/get-logos`);
+      return res.data;
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch popular products"
+      );
+    }
+  }
+);
+// 2. Initial State
+const initialState = {
+  statistics: null,
+  groups: [],
+  wellerStatus: [],
+  searchData: [],
+  getBrand: [],
+  popularProducts: [],
+  products: [],
+  carousels: [],
+  swapInterval: 4000,
+  reviews: [] as any[],
+  reviewsLoading: false,
+  reviewsError: null as string | null,
+  stats: null as any,
+  statsLoading: false,
+  loading: false,
+  error: null as string | null,
+  popularProductsLoading: false,
+
+  searchQuery: "",
+  showSearchDropdown: false,
+
+  // logos
+  logoUrl: null as string | null,
+  logoType: null as string | null,
+  faviconUrl: null as string | null,
+  logoDimensions: null as { width: number; height: number } | null,
+};
+
+// 3. Slice
+const homeSlice = createSlice({
+  name: "home",
+  initialState,
+  reducers: {
+    setSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
+    },
+    setShowSearchDropdown: (state, action: PayloadAction<boolean>) => {
+      state.showSearchDropdown = action.payload;
+    },
+    clearSearch: (state) => {
+      state.searchQuery = "";
+      state.showSearchDropdown = false;
+    },
+  },
+
+  extraReducers: (builder) => {
+    builder
+      // GLOBAL SEARCH
+      .addCase(globalSearch.pending, (state) => {
+        state.loading = true;
+        state.showSearchDropdown = true;
+      })
+      .addCase(globalSearch.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchData = action.payload;
+        state.showSearchDropdown = true;
+      })
+      .addCase(globalSearch.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch search data";
+      })
+      .addCase(getBrands.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getBrands.fulfilled, (state, action) => {
+        state.loading = false;
+        state.getBrand = action.payload;
+        state.error = null;
+      })
+      .addCase(getBrands.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch getBrand data";
+      })
+      .addCase(fetchPopularProducts.pending, (state) => {
+        state.popularProductsLoading = true;
+      })
+      .addCase(fetchPopularProducts.fulfilled, (state, action) => {
+        state.popularProductsLoading = false;
+        state.popularProducts = action.payload;
+      })
+      .addCase(fetchPopularProducts.rejected, (state, action) => {
+        state.popularProductsLoading = false;
+        state.error = action.error.message || "Failed to fetch popular products data";
+      })
+      .addCase(fetchProductsData.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProductsData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload;
+      })
+      .addCase(fetchProductsData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch products data";
+      })
+      // REVIEWS
+      .addCase(fetchReviews.pending, (state) => {
+        state.reviewsLoading = true;
+        state.reviewsError = null;
+      })
+      .addCase(fetchReviews.fulfilled, (state, action) => {
+        state.reviewsLoading = false;
+        state.reviews = action.payload;
+      })
+      .addCase(fetchReviews.rejected, (state, action) => {
+        state.reviewsLoading = false;
+        state.reviewsError = action.payload as string;
+        state.reviews = [];
+      })
+      // STATS
+      .addCase(fetchStats.pending, (state) => {
+        state.statsLoading = true;
+      })
+      .addCase(fetchStats.fulfilled, (state, action) => {
+        state.statsLoading = false;
+        state.stats = action.payload;
+      })
+      .addCase(fetchStats.rejected, (state) => {
+        state.statsLoading = false;
+        // Stats error is not critical, so we don't set error state
+      })
+
+
+
+      // search query
+      // .addCase(globalSearch.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(globalSearch.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.searchData = action.payload;
+      //   state.showSearchDropdown = true;
+      // })
+      // .addCase(globalSearch.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload as string;
+      // });
+
+
+      // carousels
+      .addCase(fetchCarousels.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchCarousels.fulfilled, (state, action) => {
+        state.loading = false;
+        state.carousels = action.payload?.slides;
+        state.swapInterval = action.payload?.settings?.swapInterval
+      })
+      .addCase(fetchCarousels.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch carousels data";
+      })
+
+
+      // Logos
+      .addCase(fetchLogos.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchLogos.fulfilled, (state, action) => {
+        const getLogos = action?.payload?.data?.[0] || {};
+        state.loading = false;
+        state.logoUrl = getLogos.logoUrl;
+        state.logoType = getLogos.logoType;
+        state.faviconUrl = getLogos.faviconUrl;
+        state.logoDimensions = getLogos.dimensions;
+      })
+      .addCase(fetchLogos.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch logos data";
+      })
+  },
+});
+export const { setSearchQuery, setShowSearchDropdown, clearSearch } = homeSlice.actions;
+
+export default homeSlice.reducer;

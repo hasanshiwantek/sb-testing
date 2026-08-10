@@ -1,0 +1,329 @@
+"use client";
+import React, { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/hooks/useReduxHooks";
+import Link from "next/link";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import ProductPrice from "../productprice/ProductPrice";
+import { fetchReviews, fetchStats } from "@/redux/slices/homeSlice";
+import { RootState } from "@/redux/store";
+import { addCart, fetchCartList } from "@/redux/slices/cartsSlice";
+import BulkInquiryModal from "../modal/BulkInquiryModal";
+import AddReviewModal from "../modal/AddReviewModal";
+
+
+
+
+const ProductMiddle = ({ product, quantity, increment, decrement, setQuantity }: any) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const minQty = product?.minPurchaseQuantity || 1;
+  const maxQty = product?.maxPurchaseQuantity;
+
+  const cart = useAppSelector((state: RootState) => state.carts?.items);
+  const availableForSale = product?.purchasabilityStatus == "available" && Number(product?.price) > 0;
+
+  useEffect(() => {
+    dispatch(fetchReviews());
+    dispatch(fetchStats());
+  }, []);
+
+  const bulkProduct = product ? {
+    name: product.name,
+    image: product.image?.[1]?.path || product.image?.[0]?.path || "/default-product-image.svg",
+    sku: product.sku ?? "",
+  } : undefined;
+
+  const reviewProduct = product ? {
+    name: product.name ?? "",
+    image: product?.image?.[0]?.path || "/default-product-image.svg",
+    sku: product.sku ?? "",
+    id: product.id,
+  } : undefined;
+  return (
+    <>
+      <section className="product-middle flex flex-col h-full w-full max-w-full  xl:max-w-[50%] 2xl:max-w-[50%] ">
+        {/* Title Section */}
+        <div className="flex flex-col gap-2 mb-4">
+          <h1 className="font-bold text-[18px] sm:text-[18px] md:text-[18px] lg:text-[20px] xl:text-[20px] 2xl:text-[20px] leading-tight text-[#545454] border-b-1 border-[#8b8b8b] pb-3 roboto-condensed-only-font" >
+            {product?.name || "N/A"}
+          </h1>
+
+          {/* Brand */}
+          <Link href={`/brand/${product?.brand?.slug}`}>
+            <h2 className="text-[14px] sm:text-[14px] md:text-[14px] text-[#545454] font-[400] uppercase hover:text-[#d40511] transition">
+              {product?.brand?.name || "N/A"}
+            </h2>
+          </Link>
+        </div>
+
+        {/* Price Section */}
+        {!availableForSale ? <div>
+          <div className="flex flex-col">
+            <h2 className="text-[#545454] flex items-center font-bold !text-[22px]" style={{ color: "#545454" }}>
+              Call for pricing:
+              {/* <Link
+                href="tel:+15022063033"
+                className="text-[#d40511] underline">
+                (502) 206-3033
+              </Link> */}
+              <Link
+                href="tel:+15020000000"
+                className="text-[#d40511] underline">
+                (502) 000-0000
+              </Link>
+            </h2>
+          </div>
+        </div> : <div>
+          <div className="flex flex-col">
+            {product?.msrp && Number(product?.msrp) > 0 ? (
+              <>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[16px] text-[#7B7B7B] font-normal">
+                    Price
+                  </span>
+                  <span>
+                    <ProductPrice
+                      price={Number(product?.msrp)}
+                      inline={true}
+                      className="!text-[16px] text-[#7B7B7B] font-normal !line-through"
+                    />
+                  </span>
+                </div>
+                <span className="">
+                  <ProductPrice
+                    price={Number(product?.price)}
+                    inline={true}
+                    textColor="#545454"
+                    className="text-[#545454] font-bold !text-[22px]"
+                  />
+                </span>
+              </>
+            ) : (
+              product?.price && (
+                <span className="">
+                  <ProductPrice
+                    price={Number(product?.price)}
+                    inline={true}
+                    textColor="#545454"
+                    className="text-[#545454] font-bold !text-[22px]"
+                  />
+                </span>
+              )
+            )}
+
+            {Number(product?.retailPrice || 0) > 0 && (
+              <span className="text-[#545454] text-[13px] sm:text-[16px]">
+                (You save{" "}
+                <ProductPrice
+                  price={Number(product?.retailPrice)}
+                  inline={true}
+                  textColor="#545454"
+                  className="!text-[13px] sm:!text-[16px]"
+                />
+                )
+              </span>
+            )}
+
+          </div>
+        </div>}
+
+        {/* Quantity & Add to Cart Section */}
+        <div className="mt-8 mb-5">
+          {availableForSale && <div className="flex items-center gap-1 mb-8 flex-wrap ">
+            <span className="text-[14px] sm:text-[14px] text-[#545454] font-bold min-w-[70px]">
+              Quantity:
+            </span>
+
+            {/* Quantity Selector */}
+            <div className="flex items-center border border-[#ddd] rounded" role="group" aria-label="Quantity selector">
+              <button
+                aria-label="Decrease quantity"
+                onClick={decrement}
+                className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-[#f5f5f5] transition text-[#4a4a4a] bg-[#cac9c9]  border-b-3 border-[#8b8b8b]"
+              >
+                <ChevronDown width={15} height={15} aria-hidden="true" />
+              </button>
+
+              <input
+                id="product-quantity"           // ✅ label se match
+                type="text"
+                value={quantity}
+                aria-label="Product quantity"
+                aria-live="polite"
+                // readOnly
+                onChange={(e) => {
+                  const val = e.target.value;
+                  // Empty allow karo typing ke liye
+                  if (val === "") {
+                    setQuantity("");
+                    return;
+                  }
+                  const num = Number(val);
+                  // Sirf valid number allow karo
+                  if (!isNaN(num) && num > 0) {
+                    // Max se zyada mat jane do
+                    if (maxQty && num > maxQty) return;
+                    setQuantity(num);
+                  }
+                }}
+                onBlur={() => {
+                  const num = Number(quantity);
+                  // Blur pe range enforce karo
+                  if (!num || num < minQty) {
+                    setQuantity(minQty);
+                    toast.error(`Minimum quantity is ${minQty}`);
+                  } else if (maxQty && num > maxQty) {
+                    setQuantity(maxQty);
+                    toast.error(`Maximum quantity is ${maxQty}`);
+                  }
+                }}
+                className="w-12 sm:w-14 h-9 sm:h-8 text-center border-x border-[#ddd] text-[15px] sm:text-[16px] font-semibold text-[#545454] outline-none bg-white"
+              />
+
+              <button
+                aria-label="Increase quantity"
+                onClick={increment}
+                className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center hover:bg-[#f5f5f5] transition text-[#4a4a4a] bg-[#cac9c9] border-b-3 border-[#8b8b8b]"
+              >
+                <ChevronUp width={15} height={15} aria-hidden="true" />
+              </button>
+            </div>
+          </div>}
+
+          {/* Add to Cart Button */}
+          {availableForSale && <button
+            aria-label={`Add ${quantity} ${product?.name} to cart`}
+            onClick={() => {
+              const existingItem = cart.find(
+                (item: any) => item.id === product.id
+              );
+              const currentQty = existingItem ? existingItem.quantity : 0;
+              const remainingQty = product?.maxPurchaseQuantity
+                ? product.maxPurchaseQuantity - currentQty
+                : quantity;
+
+              if (remainingQty <= 0) {
+                toast.error(
+                  `Cannot add more than ${product?.maxPurchaseQuantity} units of ${product.name} to cart.`
+                );
+                return;
+              }
+
+              const quantityToAdd = Math.min(quantity, remainingQty);
+              dispatch(addCart({
+                data: {
+                  productId: product?.id,
+                  quantity: quantityToAdd
+                }
+              })).unwrap().then(() => {
+                dispatch(fetchCartList());
+                toast.success(
+                  `${product.name} added to cart (${quantityToAdd})!`
+                );
+                router.push("/cart")
+              })
+
+            }}
+            className="btn-primary !w-full sm:!w-[51.7%] !py-3.5"
+          >
+            ADD TO CART
+          </button>}
+
+          {/* Bulk Quote Link */}
+          <p className="text-[15px] sm:text-[18px] text-[#545454] mt-3 font-normal">
+            Looking for a large quantity?{" "}
+            <span
+              className="text-[#D42020] hover:underline font-normal cursor-pointer"
+              onClick={() => setIsModalOpen(true)}
+            >
+              Request A Bulk Quote
+            </span>
+          </p>
+        </div>
+
+        {/* Write a Review */}
+        <div className="mb-3 pb-3 border-b border-[#e5e5e5]">
+          <button
+            onClick={() => setIsReviewModalOpen(true)}
+            className="text-[#393939] font-bold text-[13px] sm:text-[20px] hover:text-[#d40511] underline transition inline-block"
+          >
+            Write a Review
+          </button>
+        </div>
+
+        {/* Product Details */}
+        <div className="mb-6">
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <span className="text-[12px] sm:text-[14px] font-bold text-[#545454] ">
+                SKU:
+              </span>
+              <span className="text-[12px] sm:text-[14px] text-[#545454]">
+                {product?.sku || "N/A"}
+              </span>
+            </div>
+            {product?.showCondition && product?.condition && <div className="flex gap-2">
+              <span className="text-[12px] sm:text-[14px] font-bold text-[#545454] ">
+                Condition:
+              </span>
+              <span className="text-[12px] sm:text-[14px] text-[#545454]">
+                {product?.condition || ""}
+              </span>
+            </div>}
+
+            <div className="flex gap-2">
+              <span className="text-[12px] sm:text-[14px] font-bold text-[#545454] ">
+                Availability:
+              </span>
+              <span className="text-[12px] sm:text-[14px] text-[#545454]">
+                {product?.availabilityText || "N/A"}
+              </span>
+            </div>
+
+            {product?.dimensions?.weight && <div className="flex gap-2">
+              <span className="text-[12px] sm:text-[14px] font-bold text-[#545454] ">
+                Weight:
+              </span>
+              <span className="text-[12px] sm:text-[14px] text-[#545454]">
+                {product?.dimensions?.weight + " LBS"}
+              </span>
+            </div>
+            }
+            <div className="flex gap-2">
+              <span className="text-[12px] sm:text-[14px] font-bold text-[#545454] ">
+                Shipping:
+              </span>
+              <span className="text-[12px] sm:text-[14px] text-[#545454]">
+                {product?.freeShipping ? "Free Shipping" : Number(product?.fixedShippingCost) > 0 ? `$${product?.fixedShippingCost} (Fixed Shipping Cost)` : "Calculated at Checkout"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Bulk Inquiry Modal */}
+      {isModalOpen && (
+        <BulkInquiryModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={bulkProduct}
+        />
+      )}
+      {/* Review Modal */}
+      {isReviewModalOpen && (
+        <AddReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => setIsReviewModalOpen(false)}
+          product={reviewProduct}
+        />
+      )}
+    </>
+  );
+};
+
+export default ProductMiddle;
