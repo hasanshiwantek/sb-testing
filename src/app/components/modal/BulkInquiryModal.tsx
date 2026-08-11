@@ -65,10 +65,10 @@ const BulkInquiryModal: React.FC<BulkInquiryModalProps> = ({
     e.preventDefault();
 
     // ✅ Captcha check
-    if (!captchaToken) {
-      toast.error("Please verify the captcha.");
-      return;
-    }
+    // if (!captchaToken) {
+    //   toast.error("Please verify the captcha.");
+    //   return;
+    // }
     setLoading(true)
     const payload = {
       sku: product?.sku ?? "",

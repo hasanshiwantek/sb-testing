@@ -57,10 +57,10 @@ const AddReviewModal: React.FC<AddReviewModalProps> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // ✅ Captcha check
-        if (!captchaToken) {
-            toast.error("Please verify the captcha.");
-            return;
-        }
+        // if (!captchaToken) {
+        //     toast.error("Please verify the captcha.");
+        //     return;
+        // }
 
         setLoading(true);
 
